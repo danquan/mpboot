@@ -2247,6 +2247,15 @@ public:
     */
     int recvString(string &str, int src = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG);
 
+    
+    /** wrapper for MPI_Recv a string
+        @param[out] str string received
+        @param src source process
+        @param tag message tag
+        @return the {source process that sent the message, tag of message}
+    */
+    pair<int, int> recvString2(string &str, int src = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG);
+
     /** wrapper for MPI_Recv an entire Checkpoint object
         @param[out] ckp Checkpoint object received
         @param src source process

@@ -3571,6 +3571,19 @@ int MPIHelper::recvString(string &str, int src, int tag) {
     return status.MPI_SOURCE;
 }
 
+pair<int, int> MPIHelper::recvString2(string &str, int src, int tag) {
+	MPI_Status status;
+    MPI_Probe(src, tag, MPI_COMM_WORLD, &status);
+    int msgCount;
+    MPI_Get_count(&status, MPI_CHAR, &msgCount);
+    // receive the message
+    char *recvBuffer = new char[msgCount];
+    MPI_Recv(recvBuffer, msgCount, MPI_CHAR, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, &status);
+    str = recvBuffer;
+    delete [] recvBuffer;
+    return make_pair(status.MPI_SOURCE, status.MPI_TAG);
+}
+
 string MPIHelper::scatterBootstrapTrees(vector<vector<tuple<int, int, string>>> &bTrees) {
 	vector<int> cnt_vt, offset_vt;
 	string messageToSend;

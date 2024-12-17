@@ -2091,30 +2091,51 @@ double IQTree::doTreeSearch() {
         cout << "stopped_workers = " << stopped_workers << endl;
 
 
-        while(MPIHelper::getInstance().gotMessage()) {
-            string message;
-            int worker = MPIHelper::getInstance().recvString(message);
-            cout << "$$$$ Message received from process # " << worker << endl;
-            if(!stopped_processes_vec[worker]){
-                cout << "$$$$ Process " << worker << " did not getting stop message" << endl;
-            }
-        }
+        // while(MPIHelper::getInstance().gotMessage()) {
+        //     string message;
+        //     int worker = MPIHelper::getInstance().recvString(message);
+        //     cout << "$$$$ Message received from process # " << worker << endl;
+        //     if(!stopped_processes_vec[worker]){
+        //         cout << "$$$$ Process " << worker << " did not getting stop message" << endl;
+        //     }
+        // }
 
         for(int w = 1; w <= MPIHelper::getInstance().getNumProcesses() - 1; w++){
             if(!stopped_processes_vec[w]){
                 string stop_message = "1 ";
                 MPIHelper::getInstance().sendString(stop_message, w, TREE_TAG);
-                stopped_workers += 1;
-                stopped_processes_vec[w] = true;                
+                // stopped_workers += 1;
+                // stopped_processes_vec[w] = true;                
                 cout << "$$$$ Sent STOP to process # " << w << endl;
             }
-        }     
+        }
+
+        while (stopped_workers < MPIHelper::getInstance().getNumProcesses() - 1) {
+            if (MPIHelper::getInstance().gotMessage()) {
+                string message;
+                pair<int, int> status = MPIHelper::getInstance().recvString2(message);
+                
+                int worker = status.first;
+                int tag = status.second;
+
+                if (tag != STOP_TAG) {
+                    cout << "$$$$ Message received from process # " << worker << endl;
+                    if (!stopped_processes_vec[worker]) {
+                        cout << "$$$$ Process " << worker << " did not getting stop message" << endl;
+                    }
+                } else {
+                    stopped_workers += 1;
+                    stopped_processes_vec[worker] = true;
+                    cout << "$$$$ Process # " << worker << " stopped" << endl;
+                }
+            }
+        }
     } else {
         while(MPIHelper::getInstance().gotMessage()) {
             string message;
             int worker = MPIHelper::getInstance().recvString(message);
             cout << "$$$$$FOUND leftover in" << worker << endl;
-        }        
+        }
     }
     cout << "$$$$$END cleaning" << endl;
 
@@ -4774,8 +4795,8 @@ bool IQTree::syncTrees(double cur_correlation, vector<int> logl_to_send) {
                 MPIHelper::getInstance().sendString(message, worker, TREE_TAG);
             } else {
                 MPIHelper::getInstance().sendString(message, worker, TREE_TAG);
-                stopped_workers += 1;                
-                stopped_processes_vec[worker] = true;
+                // stopped_workers += 1;                
+                // stopped_processes_vec[worker] = true;
                 return true;
             }
         }
@@ -4792,7 +4813,11 @@ bool IQTree::syncTrees(double cur_correlation, vector<int> logl_to_send) {
             pter = 0;
             master = MPIHelper::getInstance().recvString(message);
             shouldStop = getNumber(message, pter);
-            if (shouldStop == 1) return true;
+            if (shouldStop == 1) {
+                string message = "I did stop!!!\n";
+                MPIHelper::getInstance().sendString(message, PROC_MASTER, STOP_TAG);
+                return true;
+            }
         }
 
         // Diep: I'm changing the logic here. The worker sends if and only if not receiving stop signal
