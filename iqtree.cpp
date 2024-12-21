@@ -4794,7 +4794,7 @@ bool IQTree::syncTrees(double cur_correlation, vector<int> logl_to_send) {
             if (!shouldStop) {
                 MPIHelper::getInstance().sendString(message, worker, TREE_TAG);
             } else {
-                MPIHelper::getInstance().sendString(message, worker, TREE_TAG);
+                // MPIHelper::getInstance().sendString(message, worker, TREE_TAG);
                 // stopped_workers += 1;                
                 // stopped_processes_vec[worker] = true;
                 return true;
